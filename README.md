@@ -4,6 +4,8 @@
 
 ## 使用
 
+在线使用：[akf.gb0.dev](https://akf.gb0.dev) | [备用](https://gb.pages.gay/ak)
+
 ## 填写信息
 
 ![](./assets/01.png)
