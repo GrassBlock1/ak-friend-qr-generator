@@ -1,0 +1,326 @@
+<!doctype html>
+<html lang="zh">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>明日方舟好友二维码生成器</title>
+    <meta property="og:title" content="明日方舟好友二维码生成器" />
+    <meta
+      property="og:description"
+      content="生成自定义的明日方舟好友二维码"
+    />
+    <script>
+      // 在样式表生效前定好主题，避免首屏闪烁；localStorage 不可用时退化为跟随系统
+      (() => {
+        const mode = (() => {
+          try {
+            return localStorage.getItem("ak-theme");
+          } catch {
+            return null;
+          }
+        })();
+        const auto = window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+        document.documentElement.dataset.theme = mode === "light" || mode === "dark" ? mode : auto;
+      })();
+    </script>
+    <link rel="icon" href="/src/favicon.ico" sizes="32x32" />
+    <link rel="icon" type="image/svg+xml" href="/src/favicon.svg" />
+    <link rel="apple-touch-icon" href="/src/apple-touch-icon.png" />
+    <link rel="stylesheet" href="/src/styles.css" />
+  </head>
+  <body>
+    <div class="card">
+      <div class="head">
+        <div>
+          <p class="kicker">Rhodes Island // Friend Invitation</p>
+          <h1>明日方舟好友二维码</h1>
+        </div>
+        <div class="modes" id="themeModes" role="group" aria-label="配色模式">
+          <button type="button" data-mode="auto">自动</button>
+          <button type="button" data-mode="light">浅色</button>
+          <button type="button" data-mode="dark">深色</button>
+        </div>
+      </div>
+      <p class="desc">
+        填好信息即可生成好友二维码，其他人只需要打开游戏即可扫描。
+      </p>
+      <p class="desc">
+        可以修改二维码的样式，也可以把二维码拼贴到其它图片上再保存。
+      </p>
+
+      <section class="panel">
+        <h2><span class="idx">01</span>填写信息</h2>
+        <div id="infoFields">
+          <div class="row" id="infoRow">
+            <div class="field">
+              <label class="req" for="uid">UID</label>
+              <input type="text" id="uid" inputmode="numeric" autocomplete="off" placeholder="例如：100200300" />
+            </div>
+            <div class="field">
+              <label class="req" for="nickName">昵称</label>
+              <input type="text" id="nickName" autocomplete="off" placeholder="例如：博士" />
+            </div>
+            <div class="field">
+              <label class="req" for="nickNum">编号</label>
+              <input type="text" id="nickNum" inputmode="numeric" autocomplete="off" placeholder="例如：3250" />
+            </div>
+          </div>
+          <div class="row" id="optRow">
+            <div class="field">
+              <label for="skinId">名片样式 id<span class="opt">选填</span></label>
+              <input type="text" id="skinId" autocomplete="off" placeholder="默认 nc" />
+            </div>
+            <div class="field">
+              <label for="skinTmpl">名片变体 id<span class="opt">选填</span></label>
+              <input type="text" id="skinTmpl" autocomplete="off" placeholder="默认 1" />
+            </div>
+            <div class="field">
+              <label for="avatarId">头像 id<span class="opt">选填</span></label>
+              <input type="text" id="avatarId" autocomplete="off" placeholder="默认 avatar" />
+            </div>
+          </div>
+        </div>
+        <p class="hint">
+          前三项为必填，其余为选填，留空时会写入默认值。如果你不清楚后三项的作用，请不要修改。
+        </p>
+        <p class="hint">
+          如果你已经获得了好友链接，可以将其粘贴进上面的任意一个输入框，网页会自动识别对应的信息。
+        </p>
+        <div class="drop" id="qrDrop" data-imgzone="qr" tabindex="0">
+          已经有二维码图片？<br />
+          <span class="hint">拖拽或粘贴到此处，或者点击选择文件</span>
+        </div>
+        <input type="file" id="qrFile" accept="image/*" hidden />
+        <div class="btns">
+          <button class="ghost small" type="button" id="qrPaste">从剪贴板粘贴图片</button>
+        </div>
+        <div class="msg" id="qrMsg"></div>
+        <div class="field">
+          <label for="urlOut">链接</label>
+          <input type="text" id="urlOut" readonly placeholder="填写用户信息后自动生成" />
+        </div>
+        <div class="btns">
+          <button class="ghost small" id="copyUrl" type="button">复制链接</button>
+        </div>
+        <div class="msg" id="infoMsg"></div>
+      </section>
+
+      <section class="panel">
+        <h2><span class="idx">02</span>美化</h2>
+        <div class="grid">
+          <div class="ctl">
+            <label for="ecc">容错等级</label>
+            <select id="ecc">
+              <option value="L">L（7%）</option>
+              <option value="M">M（15%）</option>
+              <option value="Q" selected>Q（25%，推荐）</option>
+              <option value="H">H（30%，有 Logo 时推荐）</option>
+            </select>
+          </div>
+          <div class="ctl">
+            <label for="dotStyle">码点形状</label>
+            <select id="dotStyle">
+              <option value="square">方块</option>
+              <option value="rounded">圆角</option>
+              <option value="circle">圆点</option>
+              <option value="liquid" selected>液态</option>
+            </select>
+          </div>
+          <div class="ctl">
+            <label for="cornerStyle">定位点形状</label>
+            <select id="cornerStyle">
+              <option value="square">方块</option>
+              <option value="rounded" selected>圆角矩形</option>
+              <option value="circle">圆点</option>
+            </select>
+          </div>
+          <div class="ctl">
+            <label for="outSize">导出尺寸</label>
+            <select id="outSize">
+              <option value="512">512 × 512</option>
+              <option value="1024" selected>1024 × 1024</option>
+              <option value="2048">2048 × 2048</option>
+            </select>
+          </div>
+          <div class="ctl">
+            <label for="quiet" title="二维码四周的留白，单位为数据点个数，4 为标准值">边距</label>
+            <input type="range" id="quiet" min="0" max="8" step="1" value="4" />
+          </div>
+          <div class="ctl">
+            <label for="gradAngle">渐变角度</label>
+            <input type="range" id="gradAngle" min="0" max="360" step="15" value="45" />
+          </div>
+          <div class="ctl">
+            <label>前景色</label>
+            <div class="row">
+              <input type="color" id="fg1" value="#1b1b1b" />
+              <input type="color" id="fg2" value="#2f6fed" />
+            </div>
+          </div>
+          <div class="ctl">
+            <label>背景色</label>
+            <div class="row">
+              <input type="color" id="bgColor" value="#ffffff" />
+            </div>
+          </div>
+          <div class="ctl">
+            <label for="bgRadius" title="背景圆角，0 为直角；背景透明时无效">背景圆角</label>
+            <input type="range" id="bgRadius" min="0" max="0.5" step="0.01" value="0" />
+          </div>
+        </div>
+
+        <div class="ctl">
+          <label>预设</label>
+          <div class="themes">
+            <button class="ghost small" type="button" data-theme="classic">黑白</button>
+            <button class="ghost small" type="button" data-theme="arknights">黄黑</button>
+            <button class="ghost small" type="button" data-theme="ocean">深海</button>
+            <button class="ghost small" type="button" data-theme="sakura">樱粉</button>
+            <button class="ghost small" type="button" data-theme="clear">透明底</button>
+          </div>
+        </div>
+
+        <div class="grid">
+          <label class="check" title="在两个前景色之间做线性渐变">
+            <input type="checkbox" id="useGradient" />
+            <span>前景色渐变</span>
+          </label>
+          <label class="check" title="背景透明，适合叠在图片或深色卡片上">
+            <input type="checkbox" id="transparentBg" />
+            <span>背景透明</span>
+          </label>
+          <label class="check" title="为中心的 Logo / 头像铺一层自定义底色，默认不添加">
+            <input type="checkbox" id="logoPlateOn" />
+            <span>Logo 底色</span>
+          </label>
+        </div>
+
+        <div class="grid">
+          <div class="ctl">
+            <label>中心 Logo</label>
+            <div class="drop small" id="logoDrop" data-imgzone="logo" tabindex="0">
+              点这里使用 Ctrl/⌘+V 粘贴图片<br />或者
+              <span class="accent">选择文件</span>
+            </div>
+            <input type="file" id="logoFile" accept="image/*" hidden />
+            <div class="btns">
+              <button class="ghost small" type="button" id="logoPaste">从剪贴板粘贴</button>
+              <button class="ghost small" type="button" id="logoClear">移除 Logo</button>
+            </div>
+          </div>
+          <div class="ctl">
+            <label for="logoRatio">Logo 大小</label>
+            <input type="range" id="logoRatio" min="0.1" max="0.3" step="0.02" value="0.22" />
+          </div>
+          <div class="ctl">
+            <label for="logoPlateColor">Logo 底色颜色</label>
+            <div class="row">
+              <input type="color" id="logoPlateColor" value="#ffffff" />
+            </div>
+          </div>
+          <div class="ctl">
+            <label for="logoPlatePad" title="底色比 Logo 大出的比例">Logo 底色边距</label>
+            <input type="range" id="logoPlatePad" min="0" max="0.5" step="0.01" value="0.1" />
+          </div>
+          <div class="ctl">
+            <label for="logoPlateRadius">Logo 底色圆角</label>
+            <input type="range" id="logoPlateRadius" min="0" max="0.5" step="0.01" value="0.2" />
+          </div>
+        </div>
+
+        <div class="stage">
+          <div class="qrwrap"><canvas id="qrPreview" width="512" height="512"></canvas></div>
+          <div class="side">
+            <div class="msg" id="qrInfo"></div>
+            <div class="msg warn" id="qrWarn"></div>
+            <div class="btns">
+              <button id="saveQr" type="button">保存二维码</button>
+              <button class="ghost" id="copyQr" type="button">复制到剪贴板</button>
+            </div>
+            <p class="hint">
+              安卓/PC 直接点保存；iOS 若未弹出下载，可长按二维码图片选择“另存为”。
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2><span class="idx">03</span>拼贴</h2>
+        <div class="drop" id="bgDrop" data-imgzone="bg" tabindex="0">
+          拖入或者点击选择要被拼贴的图片，或者在此处使用 Ctrl + V 粘贴底图<br />
+          <span class="hint">支持 PNG / JPG / WebP 格式</span>
+        </div>
+        <input type="file" id="bgFile" accept="image/*" hidden />
+        <div class="btns">
+          <button class="ghost small" type="button" id="bgPaste">从剪贴板粘贴底图</button>
+          <button class="ghost small" type="button" id="bgClear">清除底图</button>
+        </div>
+
+        <div class="grid">
+          <div class="ctl">
+            <label>位置</label>
+            <div class="padgrid" id="posGrid">
+              <button type="button" data-pos="0,0">↖</button>
+              <button type="button" data-pos="1,0">↑</button>
+              <button type="button" data-pos="2,0">↗</button>
+              <button type="button" data-pos="0,1">←</button>
+              <button type="button" data-pos="1,1">•</button>
+              <button type="button" data-pos="2,1">→</button>
+              <button type="button" data-pos="0,2">↙</button>
+              <button type="button" data-pos="1,2">↓</button>
+              <button type="button" data-pos="2,2">↘</button>
+            </div>
+          </div>
+          <div class="ctl">
+            <label for="qrRatio">二维码大小</label>
+            <input type="range" id="qrRatio" min="0.1" max="0.7" step="0.01" value="0.3" />
+          </div>
+          <div class="ctl">
+            <label>精细位置</label>
+            <div class="row">
+              <span class="axis">X</span>
+              <input type="number" id="posX" step="1" inputmode="numeric" disabled />
+              <span class="axis">Y</span>
+              <input type="number" id="posY" step="1" inputmode="numeric" disabled />
+            </div>
+            <p class="hint">单位为像素，在画布上使用方向键可移动 1 像素，同时按住 Shift 可以每次移动 10 像素</p>
+          </div>
+          <div class="ctl span-all">
+            <label>其他</label>
+            <label class="check"
+              ><input type="checkbox" id="snapOn" checked /><span>靠近边缘/中心时自动吸附</span></label
+            >
+          </div>
+        </div>
+
+        <div class="canvasbox" id="canvasBox" hidden>
+          <canvas
+            id="collageCanvas"
+            width="800"
+            height="600"
+            tabindex="0"
+            aria-label="拼贴画布，可用方向键微调二维码位置"
+          ></canvas>
+        </div>
+        <div class="msg" id="collageInfo">
+          <span class="hint">还没有底图，请选择一张图片后再试。</span>
+        </div>
+        <div class="btns">
+          <button id="saveCollage" type="button" disabled>保存拼贴图</button>
+          <button class="ghost" id="copyCollage" type="button" disabled>复制到剪贴板</button>
+        </div>
+      </section>
+
+      <footer>
+        <p>本站不收集任何数据，生成过程全部在浏览器里完成。</p>
+        <p>本网站由《明日方舟》游戏爱好者借助 LLM 制作。网站所涉及的公司名称、商标、产品等均为其各自所有者的资产，仅供识别。网站内使用的游戏图片、文本、设计，仅用于更好地表现网站功能，其版权属于上海鹰角网络科技有限公司及其关联公司。</p>
+        <p>© ~grassblock，程序部分由 DeepSeek V4.1 Flash 编写</p>
+      </footer>
+    </div>
+
+    <div id="toast"></div>
+    <div id="sliderTip" aria-hidden="true"></div>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

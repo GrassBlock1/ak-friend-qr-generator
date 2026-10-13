@@ -1,0 +1,22 @@
+{
+  "name": "ak-qrcode-gen",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "明日方舟好友二维码生成器",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "build:single": "vite build --mode single",
+    "icons": "d=$(mktemp -d) && for s in 16 32 48; do rsvg-convert -w $s -h $s src/favicon.svg -o $d/$s.png; done && magick $d/16.png $d/32.png $d/48.png src/favicon.ico && rsvg-convert -w 180 -h 180 src/favicon.svg -o src/apple-touch-icon.png && rm -rf $d"
+  },
+  "dependencies": {
+    "@ribpay/qr-code-generator": "^1.0.6",
+    "jsqr": "^1.4.0"
+  },
+  "devDependencies": {
+    "vite": "^8.3.4",
+    "vite-plugin-singlefile": "^2.3.3"
+  }
+}

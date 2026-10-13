@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 13 13" role="img" aria-label="明日方舟好友二维码生成器">
+  <title>明日方舟好友二维码生成器</title>
+  <!--
+    QR 码图标，13×13 模块：边距 1 模块，三个 5×5 定位点（外框 + 中心点）+ 右下数据块。
+    配色取站点强调色（accent #02a0e9）与强调色上的文字色（accent-ink #0a0b0d），对比约 6.7:1。
+    1 模块在 16px 下约 1.2px，因此定位点内孔与数据块都保持在整数模块上，保证小尺寸下不糊。
+    改色后重新生成 PNG / ICO：pnpm icons
+  -->
+  <rect width="13" height="13" fill="#02a0e9" />
+  <g fill="#0a0b0d" shape-rendering="crispEdges">
+    <!-- 定位点：外框 5×5，镂空 3×3，中心 1×1 -->
+    <path fill-rule="evenodd" d="M1 1H6V6H1Z M2 2H5V5H2Z M3 3H4V4H3Z" />
+    <path fill-rule="evenodd" d="M7 1H12V6H7Z M8 2H11V5H8Z M9 3H10V4H9Z" />
+    <path fill-rule="evenodd" d="M1 7H6V12H1Z M2 8H5V11H2Z M3 9H4V10H3Z" />
+    <!-- 数据模块 -->
+    <rect x="7" y="7" width="2" height="2" />
+    <rect x="10" y="7" width="1" height="1" />
+    <rect x="11" y="8" width="1" height="1" />
+    <rect x="9" y="9" width="2" height="2" />
+    <rect x="7" y="10" width="1" height="1" />
+    <rect x="8" y="11" width="1" height="1" />
+    <rect x="11" y="11" width="1" height="1" />
+  </g>
+</svg>
